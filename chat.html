@@ -49,9 +49,7 @@
         <button class="end-btn" onclick="endSession()">End Session</button>
     </div>
 
-    <div class="chat-area" id="chat-area">
-        <!-- Messages load here from database -->
-    </div>
+    <div class="chat-area" id="chat-area"></div>
 
     <div class="safety-bar">
         In crisis? Reach out now — <span>iCall: 9152987821</span>
@@ -63,17 +61,15 @@
     </div>
 
     <script>
-        // ── State ──────────────────────────────────────
         let currentUser = null
         let sessionId = null
         let seconds = 45 * 60
         let listenerInfo = JSON.parse(sessionStorage.getItem('contigo_listener') || '{"name":"Aanya","letter":"A","style":"PATIENT LISTENER","id":null}')
 
-document.querySelector('.listener-name').textContent = listenerInfo.name
-document.querySelector('.listener-status').textContent = '● Online — ' + listenerInfo.style
-document.querySelector('.avatar').textContent = listenerInfo.letter
+        document.querySelector('.listener-name').textContent = listenerInfo.name
+        document.querySelector('.listener-status').textContent = '● Online — ' + listenerInfo.style
+        document.querySelector('.avatar').textContent = listenerInfo.letter
 
-        // ── Timer ──────────────────────────────────────
         function updateTimer() {
             const mins = Math.floor(seconds / 60)
             const secs = seconds % 60
@@ -83,39 +79,24 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
         }
         setInterval(updateTimer, 1000)
 
-        // ── Start everything when page loads ───────────
         window.addEventListener('load', async () => {
-            // 1. Make sure user is logged in
             currentUser = await requireAuth()
             if (!currentUser) return
-
-            // 2. Get or create a session for this conversation
             await getOrCreateSession()
-
-            // 3. Load previous messages from database
             await loadMessages()
-
-            // 4. Listen for new messages in real time
             subscribeToMessages()
         })
 
-        // ── Get or create a session ────────────────────
-        // A session = one conversation. Stored in sessionStorage
-        // so refreshing the page keeps the same conversation.
         async function getOrCreateSession() {
             sessionId = sessionStorage.getItem('contigo_session_id')
             if (sessionId) return
 
             const { data, error } = await supabase
                 .from('sessions')
-                const { data } = await supabase
-    .from('sessions')
-    .insert({
-        user_id: currentUser.id,
-        listener_id: listenerInfo.id || null
-    })
-    .select()
-    .single()
+                .insert({
+                    user_id: currentUser.id,
+                    listener_id: listenerInfo.id || null
+                })
                 .select()
                 .single()
 
@@ -125,7 +106,6 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
             }
         }
 
-        // ── Load messages from database ────────────────
         async function loadMessages() {
             if (!sessionId) return
 
@@ -138,12 +118,10 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
             if (data && data.length > 0) {
                 data.forEach(msg => displayMessage(msg, false))
             } else {
-                // Show welcome message on first visit
                 showWelcomeMessage()
             }
         }
 
-        // ── Show the welcome message from Aanya ────────
         function showWelcomeMessage() {
             const chatArea = document.getElementById('chat-area')
             const div = document.createElement('div')
@@ -155,7 +133,6 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
             chatArea.appendChild(div)
         }
 
-        // ── Subscribe to real-time new messages ────────
         function subscribeToMessages() {
             supabase
                 .channel('messages_' + sessionId)
@@ -165,7 +142,6 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
                     table: 'messages',
                     filter: `session_id=eq.${sessionId}`
                 }, payload => {
-                    // Only show messages from OTHER people (we already show our own instantly)
                     if (payload.new.sender_id !== currentUser.id) {
                         displayMessage(payload.new, true)
                     }
@@ -173,13 +149,11 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
                 .subscribe()
         }
 
-        // ── Send a message ─────────────────────────────
         async function sendMessage() {
             const input = document.getElementById('message-input')
             const text = input.value.trim()
             if (!text || !sessionId) return
 
-            // Show in UI instantly (don't wait for database)
             const fakeMsg = {
                 content: text,
                 sender_id: currentUser.id,
@@ -188,7 +162,6 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
             displayMessage(fakeMsg, false)
             input.value = ''
 
-            // Save to database in background
             await supabase.from('messages').insert({
                 session_id: sessionId,
                 sender_id: currentUser.id,
@@ -196,14 +169,11 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
             })
         }
 
-        // ── Display a message bubble in the chat ───────
         function displayMessage(msg, scroll) {
             const isMe = msg.sender_id === currentUser?.id
             const chatArea = document.getElementById('chat-area')
-
             const time = new Date(msg.sent_at)
             const timeStr = time.getHours() + ':' + String(time.getMinutes()).padStart(2, '0')
-
             const div = document.createElement('div')
             div.className = 'message ' + (isMe ? 'user' : 'listener')
             div.innerHTML = `
@@ -214,20 +184,16 @@ document.querySelector('.avatar').textContent = listenerInfo.letter
             chatArea.scrollTop = chatArea.scrollHeight
         }
 
-        // ── End session ────────────────────────────────
         async function endSession() {
             if (!sessionId) return window.location.href = 'index.html'
-
             await supabase
                 .from('sessions')
                 .update({ is_active: false, ends_at: new Date().toISOString() })
                 .eq('id', sessionId)
-
             sessionStorage.removeItem('contigo_session_id')
             window.location.href = 'index.html'
         }
 
-        // ── Send on Enter key ──────────────────────────
         document.getElementById('message-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendMessage()
         })
