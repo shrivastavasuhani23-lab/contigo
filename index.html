@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contigo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body {
+            background-color: #042C53;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 60px;
+            background-color: #042C53;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #0C447C;
+        }
+
+        .logo {
+            font-size: 22px;
+            letter-spacing: 6px;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: #85B7EB;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .nav-links a:hover { color: white; }
+
+        .hero {
+            padding: 120px 20px 80px;
+            background-color: #042C53;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 58px;
+            letter-spacing: 10px;
+            margin-bottom: 16px;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            color: white;
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: #85B7EB;
+            margin-bottom: 50px;
+        }
+
+        .btn-primary {
+            background-color: #185FA5;
+            color: white;
+            padding: 16px 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #85B7EB;
+            padding: 16px 40px;
+            font-size: 16px;
+            border: 2px solid #85B7EB;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover { background-color: #378ADD; }
+        .btn-secondary:hover { background-color: #0C447C; }
+
+        .how-it-works {
+            background-color: #0C447C;
+            padding: 80px 20px;
+        }
+
+        .how-it-works h2 {
+            font-size: 32px;
+            letter-spacing: 4px;
+            margin-bottom: 60px;
+            color: #B5D4F4;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            background-color: #042C53;
+            border-radius: 16px;
+            padding: 40px 30px;
+            width: 220px;
+        }
+
+        .step-number {
+            font-size: 36px;
+            color: #378ADD;
+            margin-bottom: 16px;
+        }
+
+        .step h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            font-size: 14px;
+            color: #85B7EB;
+            line-height: 1.6;
+        }
+
+        .waitlist {
+            padding: 80px 20px;
+            background-color: #042C53;
+        }
+
+        .waitlist h2 {
+            font-size: 32px;
+            letter-spacing: 3px;
+            margin-bottom: 16px;
+            color: white;
+        }
+
+        .waitlist p {
+            color: #85B7EB;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .email-input {
+            padding: 16px 24px;
+            font-size: 16px;
+            border-radius: 30px;
+            border: 2px solid #378ADD;
+            background-color: #0C447C;
+            color: white;
+            width: 300px;
+            margin: 10px;
+            outline: none;
+        }
+
+        .footer {
+            background-color: #021A33;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .footer-brand {
+            font-size: 20px;
+            letter-spacing: 6px;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .footer-tagline {
+            color: #378ADD;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .footer-safety {
+            color: #85B7EB;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .helpline {
+            color: white;
+            font-weight: bold;
+        }
+
+        .footer-copy {
+            color: #0C447C;
+            font-size: 12px;
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">CONTIGO</a>
+        <div class="nav-links">
+            <a href="#how-it-works">How it Works</a>
+            <a href="listeners.html">For Listeners</a>
+            <a href="listeners.html" class="btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <div class="hero fade-in">
+        <h1>CONTIGO</h1>
+        <p class="tagline">Not AI. Not therapy. Just a real human — with you.</p>
+        <br><br>
+        <a href="signup.html" class="btn-primary">Get Started</a>
+        <a href="#waitlist" class="btn-secondary">Become a Listener</a>
+    </div>
+
+    <div class="how-it-works fade-in" id="how-it-works">
+        <h2>HOW IT WORKS</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">01</div>
+                <h3>Choose a Listener</h3>
+                <p>Browse real people. Pick someone whose style feels right for you.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">02</div>
+                <h3>Start Talking</h3>
+                <p>Begin with free text chat. No pressure. No judgment. Just you.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">03</div>
+                <h3>Go Deeper</h3>
+                <p>Unlock audio or video when you're ready. 45 minutes, all yours.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="waitlist fade-in" id="waitlist">
+        <h2>Be the first to know</h2>
+        <p>We are launching soon. Join the waitlist and we will reach out.</p>
+        <br><br>
+        <input type="email" placeholder="Enter your email" class="email-input">
+        <button class="btn-primary">Join Waitlist</button>
+    </div>
+
+    <footer class="footer">
+        <p class="footer-brand">CONTIGO</p>
+        <p class="footer-tagline">With you. Always.</p>
+        <p class="footer-safety">
+            If you are in crisis, please reach out —
+            <span class="helpline">iCall: 9152987821</span>
+        </p>
+        <p class="footer-copy">© 2025 Contigo. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        });
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+
+</body>
+</html>

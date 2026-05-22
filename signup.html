@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contigo — Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #042C53; color: white; font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 60px; background-color: #042C53; border-bottom: 1px solid #0C447C; }
+        .logo { font-size: 22px; letter-spacing: 6px; color: white; font-weight: bold; text-decoration: none; }
+        .nav-links { display: flex; align-items: center; gap: 30px; }
+        .nav-links a { color: #85B7EB; text-decoration: none; font-size: 15px; }
+        .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
+        .card { background-color: #0C447C; border-radius: 24px; padding: 60px 50px; width: 100%; max-width: 460px; }
+        .card h1 { font-family: 'Cormorant Garamond', serif; font-size: 36px; letter-spacing: 4px; margin-bottom: 8px; text-align: center; }
+        .card p { color: #85B7EB; font-size: 14px; text-align: center; margin-bottom: 40px; }
+        .toggle { display: flex; background-color: #042C53; border-radius: 30px; padding: 4px; margin-bottom: 36px; }
+        .toggle-btn { flex: 1; padding: 10px; border: none; border-radius: 30px; font-size: 14px; cursor: pointer; background: transparent; color: #85B7EB; font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
+        .toggle-btn.active { background-color: #185FA5; color: white; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; color: #85B7EB; margin-bottom: 8px; letter-spacing: 1px; }
+        .form-group input { width: 100%; padding: 14px 20px; background-color: #042C53; border: 1px solid #185FA5; border-radius: 12px; color: white; font-size: 15px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.3s ease; }
+        .form-group input:focus { border-color: #378ADD; }
+        .form-group input::placeholder { color: #378ADD; opacity: 0.5; }
+        .btn-submit { width: 100%; padding: 16px; background-color: #185FA5; color: white; border: none; border-radius: 30px; font-size: 16px; cursor: pointer; margin-top: 10px; font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; }
+        .btn-submit:hover { background-color: #378ADD; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-magic { width: 100%; padding: 16px; background-color: transparent; color: #85B7EB; border: 1px solid #185FA5; border-radius: 30px; font-size: 15px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
+        .btn-magic:hover { border-color: #378ADD; color: white; }
+        .divider { text-align: center; color: #378ADD; font-size: 13px; margin: 24px 0; opacity: 0.6; }
+        .login-link { text-align: center; font-size: 14px; color: #85B7EB; margin-top: 24px; }
+        .login-link a { color: white; text-decoration: none; font-weight: 500; cursor: pointer; }
+        .login-link a:hover { color: #378ADD; }
+        .message-box { display: none; padding: 14px 20px; border-radius: 12px; font-size: 14px; margin-bottom: 20px; text-align: center; }
+        .message-box.success { background-color: rgba(56,161,105,0.2); border: 1px solid #38A169; color: #9AE6B4; }
+        .message-box.error { background-color: rgba(229,62,62,0.2); border: 1px solid #E53E3E; color: #FEB2B2; }
+        .footer-safety { text-align: center; padding: 20px; color: #85B7EB; font-size: 12px; }
+        .helpline { color: white; font-weight: bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo">CONTIGO</a>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="listeners.html">Find a Listener</a>
+    </div>
+</nav>
+
+<div class="main">
+    <div class="card">
+        <h1 id="card-title">JOIN CONTIGO</h1>
+        <p id="card-subtitle">You are not alone. Let's get you started.</p>
+
+        <div class="toggle" id="role-toggle">
+            <button class="toggle-btn active" onclick="setRole('user')">I need a Listener</button>
+            <button class="toggle-btn" onclick="setRole('listener')">I am a Listener</button>
+        </div>
+
+        <div class="message-box" id="message-box"></div>
+
+        <div class="form-group" id="name-group">
+            <label>YOUR NAME</label>
+            <input type="text" id="name-input" placeholder="What should we call you?">
+        </div>
+
+        <div class="form-group">
+            <label>EMAIL</label>
+            <input type="email" id="email-input" placeholder="your@email.com">
+        </div>
+
+        <div class="form-group" id="password-group">
+            <label>PASSWORD</label>
+            <input type="password" id="password-input" placeholder="Create a password">
+        </div>
+
+        <div class="form-group" id="listener-field" style="display:none;">
+            <label>WHY DO YOU WANT TO LISTEN?</label>
+            <input type="text" id="bio-input" placeholder="Tell us a little about yourself">
+        </div>
+
+        <button class="btn-submit" id="submit-btn" onclick="handleSubmit()">Create My Account</button>
+
+        <div class="divider">— or —</div>
+
+        <button class="btn-magic" id="magic-btn" onclick="handleMagicLink()">✉️ Send me a Magic Link instead</button>
+
+        <div class="login-link">
+            <span id="toggle-text">Already have an account?</span>
+            <a onclick="toggleMode()"> <span id="toggle-link-text">Log in</span></a>
+        </div>
+    </div>
+</div>
+
+<div class="footer-safety">
+    If you are in crisis, please reach out — <span class="helpline">iCall: 9152987821</span>
+</div>
+
+<script>
+    let currentRole = 'user'
+    let isLoginMode = false
+
+    function setRole(role) {
+        currentRole = role
+        const btns = document.querySelectorAll('.toggle-btn')
+        btns.forEach(btn => btn.classList.remove('active'))
+        if (role === 'user') {
+            btns[0].classList.add('active')
+            document.getElementById('listener-field').style.display = 'none'
+        } else {
+            btns[1].classList.add('active')
+            document.getElementById('listener-field').style.display = 'block'
+        }
+    }
+
+    function toggleMode() {
+        isLoginMode = !isLoginMode
+        if (isLoginMode) {
+            document.getElementById('card-title').textContent = 'WELCOME BACK'
+            document.getElementById('card-subtitle').textContent = 'Good to see you again.'
+            document.getElementById('role-toggle').style.display = 'none'
+            document.getElementById('name-group').style.display = 'none'
+            document.getElementById('listener-field').style.display = 'none'
+            document.getElementById('submit-btn').textContent = 'Log In'
+            document.getElementById('magic-btn').textContent = '✉️ Email me a Magic Link'
+            document.getElementById('toggle-text').textContent = "Don't have an account?"
+            document.getElementById('toggle-link-text').textContent = 'Sign up'
+        } else {
+            document.getElementById('card-title').textContent = 'JOIN CONTIGO'
+            document.getElementById('card-subtitle').textContent = "You are not alone. Let's get you started."
+            document.getElementById('role-toggle').style.display = 'flex'
+            document.getElementById('name-group').style.display = 'block'
+            document.getElementById('submit-btn').textContent = 'Create My Account'
+            document.getElementById('magic-btn').textContent = '✉️ Send me a Magic Link instead'
+            document.getElementById('toggle-text').textContent = 'Already have an account?'
+            document.getElementById('toggle-link-text').textContent = 'Log in'
+            setRole(currentRole)
+        }
+        clearMessage()
+    }
+
+    function showMessage(text, type) {
+        const box = document.getElementById('message-box')
+        box.textContent = text
+        box.className = 'message-box ' + type
+        box.style.display = 'block'
+    }
+
+    function clearMessage() {
+        const box = document.getElementById('message-box')
+        box.style.display = 'none'
+    }
+
+    function setLoading(btnId, loading, label) {
+        const btn = document.getElementById(btnId)
+        btn.disabled = loading
+        btn.textContent = loading ? 'Please wait...' : label
+    }
+
+    async function handleSubmit() {
+        const name     = document.getElementById('name-input').value.trim()
+        const email    = document.getElementById('email-input').value.trim()
+        const password = document.getElementById('password-input').value
+        clearMessage()
+
+        if (!email) return showMessage('Please enter your email.', 'error')
+        if (!password) return showMessage('Please enter your password.', 'error')
+
+        if (isLoginMode) {
+            setLoading('submit-btn', true, 'Log In')
+            const result = await signInWithPassword(email, password)
+            setLoading('submit-btn', false, 'Log In')
+            if (result.success) {
+                showMessage('Welcome back! Taking you in...', 'success')
+                setTimeout(() => window.location.href = 'chat.html', 1500)
+            } else {
+                showMessage(result.message, 'error')
+            }
+        } else {
+            if (!name) return showMessage('Please enter your name.', 'error')
+            if (password.length < 6) return showMessage('Password must be at least 6 characters.', 'error')
+            setLoading('submit-btn', true, 'Create My Account')
+            const result = await signUpWithPassword(name, email, password, currentRole)
+            setLoading('submit-btn', false, 'Create My Account')
+            if (result.success) {
+                showMessage('Account created! Check your email to confirm, then log in.', 'success')
+            } else {
+                showMessage(result.message, 'error')
+            }
+        }
+    }
+
+    async function handleMagicLink() {
+        const email = document.getElementById('email-input').value.trim()
+        const name  = document.getElementById('name-input').value.trim()
+        clearMessage()
+        if (!email) return showMessage('Please enter your email first.', 'error')
+        setLoading('magic-btn', true, '✉️ Sending...')
+        const result = await signInWithMagicLink(email, currentRole, name)
+        setLoading('magic-btn', false, isLoginMode ? '✉️ Email me a Magic Link' : '✉️ Send me a Magic Link instead')
+        if (result.success) {
+            showMessage('Magic link sent! Check your inbox and click the link.', 'success')
+        } else {
+            showMessage(result.message, 'error')
+        }
+    }
+</script>
+
+</body>
+</html>
