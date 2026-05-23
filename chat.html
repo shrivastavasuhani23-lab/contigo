@@ -138,13 +138,13 @@
 
             // Try to find existing active session for this user
             const { data: existing } = await supabase
-                .from('sessions')
-                .select('id')
-                .eq('user_id', currentUser.id)
-                .eq('is_active', true)
-                .order('started_at', { ascending: false })
-                .limit(1)
-                .single()
+    .from('sessions')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .eq('is_active', true)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
             if (existing) {
                 sessionId = existing.id
