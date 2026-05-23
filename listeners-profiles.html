@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile — Contigo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ocean:       #042C53;
+      --ocean-mid:   #0a4a82;
+      --ocean-light: #e8f0f8;
+      --ocean-faint: #f4f7fb;
+      --text:        #1a1a2e;
+      --muted:       #6b7280;
+      --border:      #d1dce8;
+      --white:       #ffffff;
+      --success:     #10b981;
+      --error:       #ef4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--ocean-faint);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--ocean);
+      padding: 0 2rem;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      color: white;
+      letter-spacing: 0.06em;
+    }
+
+    .nav-back {
+      font-size: 0.8125rem;
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: color 0.15s;
+      letter-spacing: 0.01em;
+    }
+    .nav-back:hover { color: white; }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    .page-header {
+      margin-bottom: 1.75rem;
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.1rem;
+      font-weight: 500;
+      color: var(--ocean);
+      line-height: 1.15;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      font-weight: 300;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--white);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(4,44,83,0.06);
+    }
+
+    /* ── AVATAR HEADER ── */
+    .avatar-section {
+      background: var(--ocean);
+      padding: 1.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .avatar-circle {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 2px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      color: white;
+      font-weight: 500;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .avatar-info h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      color: white;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    .avatar-info p {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.55);
+      margin-top: 0.25rem;
+      font-weight: 300;
+    }
+
+    /* ── FORM ── */
+    .form-body {
+      padding: 1.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--ocean);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    input[type="text"],
+    textarea {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      color: var(--text);
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.875rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      width: 100%;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--ocean);
+      box-shadow: 0 0 0 3px rgba(4,44,83,0.08);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #b0bcc8;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+      line-height: 1.55;
+    }
+
+    .field-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── TAG PILLS ── */
+    .tags-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.3rem;
+      min-height: 1rem;
+    }
+
+    .tag-pill {
+      background: var(--ocean-light);
+      color: var(--ocean);
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.22rem 0.65rem;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── AVAILABILITY TOGGLE ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.95rem 1.1rem;
+      background: var(--ocean-light);
+      border-radius: 9px;
+      gap: 1rem;
+    }
+
+    .toggle-label-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .toggle-label-group strong {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--ocean);
+    }
+
+    .toggle-label-group span {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #cbd5e1;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle input:checked + .toggle-slider { background: var(--ocean); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* ── FOOTER ── */
+    .divider { height: 1px; background: var(--border); }
+
+    .form-footer {
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-save {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: white;
+      background: var(--ocean);
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.6rem;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-save:hover:not(:disabled) { background: var(--ocean-mid); }
+    .btn-save:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .save-status {
+      font-size: 0.82rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .save-status.visible { opacity: 1; }
+    .save-status.success { color: var(--success); }
+    .save-status.error   { color: var(--error); }
+
+    /* ── LOADING / ERROR ── */
+    .state-msg {
+      padding: 3.5rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 300;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Contigo</span>
+  <a href="dashboard.html" class="nav-back">← Back to Dashboard</a>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">How you appear to people seeking support</p>
+  </div>
+
+  <div class="card" id="profileCard">
+    <div class="state-msg" id="loadingMsg">Loading your profile…</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ── CONFIG — copy from your other pages ──────────────────────
+  const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // ─────────────────────────────────────────────────────────────
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentUser = null;
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUser = session.user;
+    await loadProfile();
+  }
+
+  async function loadProfile() {
+    const { data, error } = await sb
+      .from('profiles')
+      .select('full_name, bio, tags, is_available, role')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (error || !data) {
+      document.getElementById('loadingMsg').textContent =
+        'Could not load profile. Please refresh.';
+      return;
+    }
+
+    renderForm(data);
+  }
+
+  function renderForm(p) {
+    const name        = p.full_name   || '';
+    const bio         = p.bio         || '';
+    const tags        = Array.isArray(p.tags) ? p.tags : [];
+    const isAvailable = p.is_available ?? false;
+    const letter      = name.trim() ? name.trim()[0].toUpperCase() : '?';
+
+    document.getElementById('profileCard').innerHTML = `
+      <div class="avatar-section">
+        <div class="avatar-circle" id="avatarCircle">${letter}</div>
+        <div class="avatar-info">
+          <h2 id="avatarName">${esc(name) || 'Your Name'}</h2>
+          <p>${esc(currentUser.email)}</p>
+        </div>
+      </div>
+
+      <div class="form-body">
+
+        <div class="field">
+          <label for="fullName">Full Name</label>
+          <input
+            type="text"
+            id="fullName"
+            value="${esc(name)}"
+            placeholder="Your display name"
+            maxlength="80"
+          />
+        </div>
+
+        <div class="field">
+          <label for="bio">Bio</label>
+          <textarea
+            id="bio"
+            placeholder="Tell people what kind of listener you are, what you're here for…"
+            maxlength="400"
+          >${esc(bio)}</textarea>
+          <span class="field-hint">Max 400 characters. Warm and honest works best.</span>
+        </div>
+
+        <div class="field">
+          <label for="tagsInput">Tags</label>
+          <input
+            type="text"
+            id="tagsInput"
+            value="${esc(tags.join(', '))}"
+            placeholder="grief, anxiety, late nights, LGBTQ+…"
+          />
+          <span class="field-hint">Comma-separated. Helps people find the right listener.</span>
+          <div class="tags-preview" id="tagsPrev">
+            ${tags.map(t => `<span class="tag-pill">${esc(t.trim())}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-label-group">
+            <strong>Available to listen</strong>
+            <span>Toggle off when you need a break</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="isAvailable" ${isAvailable ? 'checked' : ''} />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="form-footer">
+        <button class="btn-save" id="saveBtn" onclick="saveProfile()">Save Changes</button>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+    `;
+
+    // Live avatar preview
+    document.getElementById('fullName').addEventListener('input', e => {
+      const v = e.target.value.trim();
+      document.getElementById('avatarCircle').textContent = v ? v[0].toUpperCase() : '?';
+      document.getElementById('avatarName').textContent   = v || 'Your Name';
+    });
+
+    // Live tag pills
+    document.getElementById('tagsInput').addEventListener('input', e => {
+      const parts = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+      document.getElementById('tagsPrev').innerHTML =
+        parts.map(t => `<span class="tag-pill">${esc(t)}</span>`).join('');
+    });
+  }
+
+  async function saveProfile() {
+    const btn    = document.getElementById('saveBtn');
+    const status = document.getElementById('saveStatus');
+
+    const full_name    = document.getElementById('fullName').value.trim();
+    const bio          = document.getElementById('bio').value.trim();
+    const tagsRaw      = document.getElementById('tagsInput').value;
+    const tags         = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+    const is_available = document.getElementById('isAvailable').checked;
+
+    if (!full_name) {
+      showStatus('Name cannot be empty.', 'error');
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = 'Saving…';
+    clearStatus();
+
+    // 1. Update profiles
+    const { error: profileErr } = await sb
+      .from('profiles')
+      .update({ full_name, bio, tags, is_available })
+      .eq('id', currentUser.id);
+
+    if (profileErr) {
+      showStatus('Save failed. Try again.', 'error');
+      btn.disabled    = false;
+      btn.textContent = 'Save Changes';
+      return;
+    }
+
+    // 2. Sync listeners row if it exists
+    const avatar_letter = full_name[0].toUpperCase();
+    await sb
+      .from('listeners')
+      .update({ full_name, bio, tags, is_available, avatar_letter })
+      .eq('id', currentUser.id);
+    // No-op if this user has no listeners row — that's fine.
+
+    btn.disabled    = false;
+    btn.textContent = 'Save Changes';
+    showStatus('Saved ✓', 'success');
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('saveStatus');
+    el.textContent = msg;
+    el.className = `save-status visible ${type}`;
+    if (type === 'success') {
+      setTimeout(() => { el.className = 'save-status'; el.textContent = ''; }, 3000);
+    }
+  }
+
+  function clearStatus() {
+    const el = document.getElementById('saveStatus');
+    el.className = 'save-status';
+    el.textContent = '';
+  }
+
+  function esc(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>
