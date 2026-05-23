@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contigo — Listener Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #042C53; color: white; font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 40px; background-color: #0C447C;
+            border-bottom: 1px solid #185FA5;
+        }
+        .logo { font-family: 'Cormorant Garamond', serif; font-size: 22px; letter-spacing: 4px; }
+        .listener-badge {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; color: #85B7EB;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #1D9E75; }
+        .status-dot.busy { background-color: #E8593C; }
+        .logout-btn {
+            background: transparent; border: 1px solid #185FA5; color: #85B7EB;
+            padding: 7px 16px; border-radius: 20px; font-size: 12px;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+        }
+        .logout-btn:hover { background-color: #042C53; }
+
+        .main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+        .welcome {
+            margin-bottom: 40px;
+        }
+        .welcome h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px; font-weight: 400; margin-bottom: 6px;
+        }
+        .welcome p { color: #85B7EB; font-size: 14px; }
+
+        .stats-row {
+            display: flex; gap: 16px; margin-bottom: 40px;
+        }
+        .stat-card {
+            flex: 1; background-color: #0C447C; border: 1px solid #185FA5;
+            border-radius: 12px; padding: 20px 24px;
+        }
+        .stat-num { font-size: 32px; font-weight: 300; color: white; }
+        .stat-label { font-size: 12px; color: #85B7EB; margin-top: 4px; }
+
+        .section-title {
+            font-size: 11px; letter-spacing: 2px; color: #85B7EB;
+            text-transform: uppercase; margin-bottom: 16px;
+        }
+
+        .toggle-row {
+            display: flex; align-items: center; gap: 14px;
+            background-color: #0C447C; border: 1px solid #185FA5;
+            border-radius: 12px; padding: 18px 24px; margin-bottom: 32px;
+        }
+        .toggle-label { flex: 1; font-size: 14px; }
+        .toggle-sub { font-size: 12px; color: #85B7EB; margin-top: 2px; }
+        .toggle {
+            position: relative; width: 48px; height: 26px;
+            background-color: #185FA5; border-radius: 13px;
+            cursor: pointer; transition: background-color 0.3s;
+        }
+        .toggle.active { background-color: #1D9E75; }
+        .toggle-knob {
+            position: absolute; top: 3px; left: 3px;
+            width: 20px; height: 20px; background: white;
+            border-radius: 50%; transition: left 0.3s;
+        }
+        .toggle.active .toggle-knob { left: 25px; }
+
+        .requests-section { margin-bottom: 40px; }
+
+        .request-card {
+            background-color: #0C447C; border: 1px solid #185FA5;
+            border-radius: 12px; padding: 20px 24px;
+            margin-bottom: 12px; display: flex;
+            align-items: center; justify-content: space-between;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .request-card.urgent { border-color: #E8593C; }
+
+        .request-info { flex: 1; }
+        .request-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+        .request-meta { font-size: 12px; color: #85B7EB; }
+        .request-time { font-size: 11px; color: #378ADD; margin-top: 4px; }
+
+        .accept-btn {
+            background-color: #185FA5; color: white; border: none;
+            padding: 10px 22px; border-radius: 20px; font-size: 13px;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: background-color 0.2s;
+        }
+        .accept-btn:hover { background-color: #378ADD; }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            color: #85B7EB; font-size: 14px;
+        }
+        .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.5; }
+        .pulse {
+            display: inline-block; width: 8px; height: 8px;
+            border-radius: 50%; background-color: #1D9E75;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(29, 158, 117, 0.5); }
+            70% { box-shadow: 0 0 0 8px rgba(29, 158, 117, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(29, 158, 117, 0); }
+        }
+
+        .history-section {}
+        .history-card {
+            background-color: #0A3A6E; border: 1px solid #185FA5;
+            border-radius: 10px; padding: 16px 20px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .history-name { font-size: 14px; margin-bottom: 3px; }
+        .history-meta { font-size: 12px; color: #85B7EB; }
+        .history-duration { font-size: 12px; color: #378ADD; }
+
+        .safety-bar {
+            text-align: center; padding: 10px;
+            background-color: #021A33; font-size: 11px; color: #85B7EB;
+        }
+        .safety-bar span { color: white; font-weight: bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="logo">CONTIGO</div>
+    <div class="listener-badge">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="listener-name-display">Listener</span>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">Log out</button>
+</div>
+
+<div class="main">
+
+    <div class="welcome">
+        <h1>Welcome back 💙</h1>
+        <p>You're making a real difference. Here's what's waiting for you.</p>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-num" id="stat-waiting">—</div>
+            <div class="stat-label">Waiting right now</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="stat-sessions">—</div>
+            <div class="stat-label">Your sessions total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="stat-today">—</div>
+            <div class="stat-label">Sessions today</div>
+        </div>
+    </div>
+
+    <div class="toggle-row">
+        <div>
+            <div class="toggle-label">Available to listen</div>
+            <div class="toggle-sub" id="availability-sub">Toggle on to start receiving requests</div>
+        </div>
+        <div class="toggle" id="availability-toggle" onclick="toggleAvailability()">
+            <div class="toggle-knob"></div>
+        </div>
+    </div>
+
+    <div class="requests-section">
+        <div class="section-title">
+            <span class="pulse"></span>&nbsp; Live requests
+        </div>
+        <div id="requests-container">
+            <div class="empty-state">
+                <div class="empty-icon">🎧</div>
+                <div>No one waiting right now.<br>Toggle available to start receiving.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <div class="section-title">Recent sessions</div>
+        <div id="history-container">
+            <div style="color:#85B7EB; font-size:13px;">No sessions yet.</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="safety-bar">
+    If a user is in crisis, guide them to — <span>iCall: 9152987821</span>
+</div>
+
+<script>
+    let currentUser = null
+    let isAvailable = false
+    let requestsChannel = null
+
+    window.addEventListener('load', async () => {
+        currentUser = await requireAuth()
+        if (!currentUser) return
+
+        // Show listener name
+        const profile = await getProfile()
+        if (profile) {
+            document.getElementById('listener-name-display').textContent = profile.full_name || 'Listener'
+        }
+
+        await loadStats()
+        await loadHistory()
+        subscribeToRequests()
+    })
+
+    async function getProfile() {
+        const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single()
+        return data
+    }
+
+    async function loadStats() {
+        // Waiting users count
+        const { count: waiting } = await supabase
+            .from('sessions')
+            .select('*', { count: 'exact', head: true })
+            .is('listener_id', null)
+            .eq('is_active', true)
+
+        // Total sessions for this listener
+        const { count: total } = await supabase
+            .from('sessions')
+            .select('*', { count: 'exact', head: true })
+            .eq('listener_id', currentUser.id)
+
+        // Today's sessions
+        const today = new Date()
+        today.setHours(0,0,0,0)
+        const { count: todayCount } = await supabase
+            .from('sessions')
+            .select('*', { count: 'exact', head: true })
+            .eq('listener_id', currentUser.id)
+            .gte('started_at', today.toISOString())
+
+        document.getElementById('stat-waiting').textContent = waiting || 0
+        document.getElementById('stat-sessions').textContent = total || 0
+        document.getElementById('stat-today').textContent = todayCount || 0
+    }
+
+    async function loadHistory() {
+        const { data } = await supabase
+            .from('sessions')
+            .select('*, profiles:user_id(full_name)')
+            .eq('listener_id', currentUser.id)
+            .eq('is_active', false)
+            .order('started_at', { ascending: false })
+            .limit(5)
+
+        const container = document.getElementById('history-container')
+        if (!data || data.length === 0) return
+
+        container.innerHTML = data.map(s => {
+            const date = new Date(s.started_at).toLocaleDateString('en-IN', { day:'numeric', month:'short' })
+            const name = s.profiles?.full_name || 'Anonymous'
+            return `
+                <div class="history-card">
+                    <div>
+                        <div class="history-name">${name}</div>
+                        <div class="history-meta">${date}</div>
+                    </div>
+                    <div class="history-duration">Session ended</div>
+                </div>
+            `
+        }).join('')
+    }
+
+    function subscribeToRequests() {
+        requestsChannel = supabase
+            .channel('new_sessions')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'sessions'
+            }, payload => {
+                if (isAvailable) {
+                    loadLiveRequests()
+                    loadStats()
+                }
+            })
+            .subscribe()
+    }
+
+    async function loadLiveRequests() {
+        const { data } = await supabase
+            .from('sessions')
+            .select('*, profiles:user_id(full_name)')
+            .is('listener_id', null)
+            .eq('is_active', true)
+            .order('started_at', { ascending: true })
+
+        const container = document.getElementById('requests-container')
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🎧</div>
+                    <div>No one waiting right now.<br>Stay available — new requests appear here instantly.</div>
+                </div>`
+            return
+        }
+
+        container.innerHTML = data.map(session => {
+            const name = session.profiles?.full_name || 'Anonymous'
+            const waitTime = getWaitTime(session.started_at)
+            return `
+                <div class="request-card">
+                    <div class="request-info">
+                        <div class="request-name">${name}</div>
+                        <div class="request-meta">Looking for a listener</div>
+                        <div class="request-time">Waiting ${waitTime}</div>
+                    </div>
+                    <button class="accept-btn" onclick="acceptSession('${session.id}', '${name}')">
+                        Accept
+                    </button>
+                </div>
+            `
+        }).join('')
+
+        document.getElementById('stat-waiting').textContent = data.length
+    }
+
+    function getWaitTime(startedAt) {
+        const diff = Math.floor((Date.now() - new Date(startedAt)) / 1000)
+        if (diff < 60) return diff + 's'
+        if (diff < 3600) return Math.floor(diff/60) + 'm'
+        return Math.floor(diff/3600) + 'h'
+    }
+
+    async function acceptSession(sessionId, userName) {
+        // Claim this session
+        const { error } = await supabase
+            .from('sessions')
+            .update({ listener_id: currentUser.id })
+            .eq('id', sessionId)
+            .is('listener_id', null)
+
+        if (error) {
+            alert('Someone else just accepted this session. Refreshing...')
+            loadLiveRequests()
+            return
+        }
+
+        // Store session info and go to chat
+        sessionStorage.setItem('contigo_session_id', sessionId)
+        sessionStorage.setItem('contigo_is_listener', 'true')
+        sessionStorage.setItem('contigo_chat_user', userName)
+        window.location.href = 'chat.html'
+    }
+
+    function toggleAvailability() {
+        isAvailable = !isAvailable
+        const toggle = document.getElementById('availability-toggle')
+        const dot = document.getElementById('status-dot')
+        const sub = document.getElementById('availability-sub')
+
+        toggle.classList.toggle('active', isAvailable)
+        dot.classList.toggle('busy', !isAvailable)
+
+        if (isAvailable) {
+            sub.textContent = 'You are available — requests will appear below'
+            loadLiveRequests()
+        } else {
+            sub.textContent = 'Toggle on to start receiving requests'
+            document.getElementById('requests-container').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🎧</div>
+                    <div>Toggle available to see waiting users.</div>
+                </div>`
+        }
+    }
+
+    async function handleLogout() {
+        await supabase.auth.signOut()
+        window.location.href = 'index.html'
+    }
+</script>
+
+</body>
+</html>
