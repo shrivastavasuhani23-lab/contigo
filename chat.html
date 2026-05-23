@@ -70,24 +70,17 @@
         let seconds = 45 * 60
 
         const isListener = sessionStorage.getItem('contigo_is_listener') === 'true'
-        const chatUserName = sessionStorage.getItem('contigo_chat_user') || 'User'
+        const chatUserName = sessionStorage.getItem('contigo_chat_user') || 'Someone'
 
-        // Safe parse of listener info — avoids null style bug
-        let listenerInfo = { name: 'Aanya', letter: 'A', style: 'Patient Listener', id: null }
-        try {
-            const stored = sessionStorage.getItem('contigo_listener')
-            if (stored) {
-                const parsed = JSON.parse(stored)
-                listenerInfo = {
-                    name: parsed.name || 'Aanya',
-                    letter: parsed.letter || 'A',
-                    style: parsed.style || 'Patient Listener',
-                    id: parsed.id || null
-                }
-            }
-        } catch(e) {}
+        // Helper: get clean display name from profile
+        function getDisplayName(profile) {
+            if (!profile) return null
+            if (profile.full_name && profile.full_name.trim()) return profile.full_name.trim()
+            if (profile.email) return profile.email.split('@')[0]
+            return null
+        }
 
-        // Set topbar based on role
+        // Set topbar for listener role immediately
         if (isListener) {
             document.getElementById('topbar-name').textContent = chatUserName
             document.getElementById('topbar-avatar').textContent = chatUserName.charAt(0).toUpperCase()
@@ -95,10 +88,6 @@
             const badge = document.getElementById('role-badge')
             badge.style.display = 'block'
             badge.textContent = 'You are listening'
-        } else {
-            document.getElementById('topbar-name').textContent = listenerInfo.name
-            document.getElementById('topbar-avatar').textContent = listenerInfo.letter
-            document.getElementById('topbar-status').textContent = '● Online — ' + listenerInfo.style
         }
 
         // Timer
@@ -116,35 +105,70 @@
             if (!currentUser) return
 
             if (isListener) {
-                // Listener: session already set by dashboard
                 sessionId = sessionStorage.getItem('contigo_session_id')
-                if (!sessionId) {
-                    window.location.href = 'dashboard.html'
-                    return
-                }
+                if (!sessionId) { window.location.href = 'dashboard.html'; return }
             } else {
-                // User: get or create session
+                // Clear stale sessionStorage if no active session
+                const storedId = sessionStorage.getItem('contigo_session_id')
+                if (!storedId) {
+                    sessionStorage.removeItem('contigo_listener')
+                }
                 await getOrCreateSession()
+                await updateTopbarForUser()
             }
 
             await loadMessages()
             subscribeToMessages()
         })
 
+        // Fetch actual listener name from session data and update topbar
+        async function updateTopbarForUser() {
+            if (!sessionId) return
+
+            const { data: session } = await supabase
+                .from('sessions')
+                .select('listener_id, profiles:listener_id(full_name, email)')
+                .eq('id', sessionId)
+                .maybeSingle()
+
+            if (session && session.listener_id && session.profiles) {
+                const name = getDisplayName(session.profiles) || 'Your Listener'
+                document.getElementById('topbar-name').textContent = name
+                document.getElementById('topbar-avatar').textContent = name.charAt(0).toUpperCase()
+                document.getElementById('topbar-status').textContent = '● Online — Patient Listener'
+            } else {
+                // No listener assigned yet
+                document.getElementById('topbar-name').textContent = 'Finding your listener...'
+                document.getElementById('topbar-avatar').textContent = '💙'
+                document.getElementById('topbar-status').textContent = '● Connecting'
+
+                // Subscribe to session updates so topbar updates when listener joins
+                supabase
+                    .channel('session_update_' + sessionId)
+                    .on('postgres_changes', {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'sessions',
+                        filter: `id=eq.${sessionId}`
+                    }, async () => {
+                        await updateTopbarForUser()
+                    })
+                    .subscribe()
+            }
+        }
+
         async function getOrCreateSession() {
-            // Check sessionStorage first
             sessionId = sessionStorage.getItem('contigo_session_id')
             if (sessionId) return
 
-            // Try to find existing active session for this user
             const { data: existing } = await supabase
-    .from('sessions')
-    .select('id')
-    .eq('user_id', currentUser.id)
-    .eq('is_active', true)
-    .order('started_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+                .from('sessions')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('is_active', true)
+                .order('started_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
 
             if (existing) {
                 sessionId = existing.id
@@ -152,14 +176,9 @@
                 return
             }
 
-            // No existing session — create a fresh one with no listener
             const { data, error } = await supabase
                 .from('sessions')
-                .insert({
-                    user_id: currentUser.id,
-                    listener_id: null,
-                    is_active: true
-                })
+                .insert({ user_id: currentUser.id, listener_id: null, is_active: true })
                 .select()
                 .single()
 
@@ -173,7 +192,6 @@
 
         async function loadMessages() {
             if (!sessionId) return
-
             const { data } = await supabase
                 .from('messages')
                 .select('*')
@@ -183,11 +201,8 @@
             if (data && data.length > 0) {
                 data.forEach(msg => displayMessage(msg, false))
             } else {
-                if (isListener) {
-                    showSystemMessage("You've joined this session. Say hello 💙")
-                } else {
-                    showWelcomeMessage()
-                }
+                if (isListener) showSystemMessage("You've joined this session. Say hello 💙")
+                else showWelcomeMessage()
             }
         }
 
@@ -214,9 +229,7 @@
             supabase
                 .channel('messages_' + sessionId)
                 .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'messages',
+                    event: 'INSERT', schema: 'public', table: 'messages',
                     filter: `session_id=eq.${sessionId}`
                 }, payload => {
                     if (payload.new.sender_id !== currentUser.id) {
@@ -230,24 +243,13 @@
             const input = document.getElementById('message-input')
             const text = input.value.trim()
             if (!text) return
+            if (!sessionId) { alert('Still connecting, please wait...'); return }
 
-            if (!sessionId) {
-                alert('Still connecting, please wait a moment...')
-                return
-            }
-
-            const fakeMsg = {
-                content: text,
-                sender_id: currentUser.id,
-                sent_at: new Date().toISOString()
-            }
-            displayMessage(fakeMsg, false)
+            displayMessage({ content: text, sender_id: currentUser.id, sent_at: new Date().toISOString() }, false)
             input.value = ''
 
             const { error } = await supabase.from('messages').insert({
-                session_id: sessionId,
-                sender_id: currentUser.id,
-                content: text
+                session_id: sessionId, sender_id: currentUser.id, content: text
             })
             if (error) console.error('Send error:', error)
         }
@@ -259,31 +261,27 @@
             const timeStr = time.getHours() + ':' + String(time.getMinutes()).padStart(2, '0')
             const div = document.createElement('div')
             div.className = 'message ' + (isMe ? 'user' : 'listener')
-            div.innerHTML = `
-                <div class="bubble">${msg.content}</div>
-                <div class="message-time">${timeStr}</div>
-            `
+            div.innerHTML = `<div class="bubble">${msg.content}</div><div class="message-time">${timeStr}</div>`
             chatArea.appendChild(div)
             chatArea.scrollTop = chatArea.scrollHeight
         }
 
         async function endSession() {
             if (sessionId) {
-                await supabase
-                    .from('sessions')
+                await supabase.from('sessions')
                     .update({ is_active: false, ends_at: new Date().toISOString() })
                     .eq('id', sessionId)
             }
             sessionStorage.removeItem('contigo_session_id')
             sessionStorage.removeItem('contigo_is_listener')
             sessionStorage.removeItem('contigo_chat_user')
+            sessionStorage.removeItem('contigo_listener')
             window.location.href = isListener ? 'dashboard.html' : 'index.html'
         }
 
-        document.getElementById('message-input').addEventListener('keypress', function(e) {
+        document.getElementById('message-input').addEventListener('keypress', e => {
             if (e.key === 'Enter') sendMessage()
         })
     </script>
-
 </body>
 </html>
