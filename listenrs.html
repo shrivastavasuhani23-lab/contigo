@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contigo — Find a Listener</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #042C53; color: white; font-family: 'Inter', sans-serif; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 60px; background-color: #042C53; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #0C447C; }
+        .logo { font-size: 22px; letter-spacing: 6px; color: white; font-weight: bold; text-decoration: none; }
+        .nav-links { display: flex; align-items: center; gap: 30px; }
+        .nav-links a { color: #85B7EB; text-decoration: none; font-size: 15px; }
+        .btn-primary { background-color: #185FA5; color: white; padding: 16px 40px; font-size: 16px; border: none; border-radius: 30px; cursor: pointer; text-decoration: none; }
+        .btn-primary:hover { background-color: #378ADD; }
+        .page-header { text-align: center; padding: 80px 20px 60px; }
+        .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 48px; letter-spacing: 6px; margin-bottom: 16px; }
+        .page-header p { color: #85B7EB; font-size: 16px; }
+        .listeners-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px 60px 80px; }
+        .listener-card { background-color: #0C447C; border-radius: 20px; padding: 40px 30px; width: 280px; text-align: center; transition: transform 0.3s ease; cursor: pointer; }
+        .listener-card:hover { transform: translateY(-8px); }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; background-color: #185FA5; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px; font-family: 'Cormorant Garamond', serif; }
+        .listener-name { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+        .listener-style { color: #378ADD; font-size: 13px; margin-bottom: 16px; letter-spacing: 1px; }
+        .listener-bio { color: #85B7EB; font-size: 13px; line-height: 1.7; margin-bottom: 20px; }
+        .tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 24px; }
+        .tag { background-color: #042C53; color: #85B7EB; padding: 4px 14px; border-radius: 20px; font-size: 12px; }
+        .available { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: #85B7EB; margin-bottom: 20px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .btn-talk { background-color: #185FA5; color: white; padding: 12px 30px; border: none; border-radius: 30px; font-size: 14px; cursor: pointer; width: 100%; font-family: 'Inter', sans-serif; }
+        .btn-talk:hover { background-color: #378ADD; }
+        .btn-talk:disabled { background-color: #0C447C; color: #378ADD; cursor: not-allowed; }
+        .loading { text-align: center; color: #85B7EB; padding: 60px; font-size: 16px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo">CONTIGO</a>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="signup.html" class="btn-primary">Sign Up</a>
+    </div>
+</nav>
+
+<div class="page-header">
+    <h1>FIND YOUR LISTENER</h1>
+    <p>Real people. Warm hearts. Here for you right now.</p>
+</div>
+
+<div class="listeners-grid" id="listeners-grid">
+    <div class="loading">Finding listeners for you...</div>
+</div>
+
+<script>
+    // Load listeners from Supabase on page load
+    window.addEventListener('load', async () => {
+        await loadListeners()
+    })
+
+    async function loadListeners() {
+        const grid = document.getElementById('listeners-grid')
+
+        const { data, error } = await supabase
+            .from('listeners')
+            .select('*')
+            .order('full_name')
+
+        if (error || !data || data.length === 0) {
+            grid.innerHTML = '<div class="loading">No listeners found. Check back soon.</div>'
+            return
+        }
+
+        grid.innerHTML = ''
+        data.forEach(listener => {
+            grid.appendChild(createCard(listener))
+        })
+    }
+
+    function createCard(listener) {
+        const card = document.createElement('div')
+        card.className = 'listener-card'
+
+        const dotColor = listener.is_available ? '#1D9E75' : '#85B7EB'
+        const availText = listener.is_available ? 'Available now' : 'Away'
+        const tags = (listener.tags || []).map(t => `<span class="tag">${t}</span>`).join('')
+
+        card.innerHTML = `
+            <div class="avatar">${listener.avatar_letter}</div>
+            <div class="listener-name">${listener.full_name}</div>
+            <div class="listener-style">${listener.style}</div>
+            <div class="listener-bio">${listener.bio}</div>
+            <div class="tags">${tags}</div>
+            <div class="available">
+                <div class="dot" style="background-color: ${dotColor}"></div>
+                ${availText}
+            </div>
+            <button class="btn-talk"
+                onclick="startSession('${listener.id}', '${listener.full_name}', '${listener.avatar_letter}', '${listener.style}', ${listener.is_available})"
+                ${!listener.is_available ? 'disabled' : ''}>
+                ${listener.is_available ? 'Start Talking' : 'Not Available'}
+            </button>
+        `
+        return card
+    }
+
+    async function startSession(listenerId, name, letter, style, isAvailable) {
+        // Check if user is logged in
+        const user = await getCurrentUser()
+        if (!user) {
+            // Save where they wanted to go, send to signup
+            sessionStorage.setItem('intended_listener', JSON.stringify({ listenerId, name, letter, style }))
+            window.location.href = 'signup.html'
+            return
+        }
+
+        // If chosen listener not available, auto-match to any available one
+        let finalListenerId = listenerId
+        let finalName = name
+        let finalLetter = letter
+        let finalStyle = style
+
+        if (!isAvailable) {
+            const { data } = await supabase
+                .from('listeners')
+                .select('*')
+                .eq('is_available', true)
+                .limit(1)
+                .single()
+
+            if (data) {
+                finalListenerId = data.id
+                finalName = data.full_name
+                finalLetter = data.avatar_letter
+                finalStyle = data.style
+            }
+        }
+
+        // Store listener info so chat.html knows who to show
+        sessionStorage.setItem('contigo_listener', JSON.stringify({
+            id: finalListenerId,
+            name: finalName,
+            letter: finalLetter,
+            style: finalStyle
+        }))
+
+        // Clear any old session so chat.html starts fresh
+        sessionStorage.removeItem('contigo_session_id')
+
+        window.location.href = 'chat.html'
+    }
+</script>
+
+</body>
+</html>
