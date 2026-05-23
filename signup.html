@@ -175,8 +175,16 @@
             const result = await signInWithPassword(email, password)
             setLoading('submit-btn', false, 'Log In')
             if (result.success) {
-                showMessage('Welcome back! Taking you in...', 'success')
-                setTimeout(() => window.location.href = 'chat.html', 1500)
+    showMessage('Welcome back! Taking you in...', 'success')
+    setTimeout(async () => {
+        const profile = await getMyProfile()
+        if (profile && profile.role === 'listener') {
+            window.location.href = 'dashboard.html'
+        } else {
+            window.location.href = 'listeners.html'
+        }
+    }, 1500)
+}
             } else {
                 showMessage(result.message, 'error')
             }
