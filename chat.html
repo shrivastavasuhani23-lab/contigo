@@ -30,7 +30,7 @@
         .message-input::placeholder { color: #378ADD; opacity: 0.5; }
         .send-btn { width: 48px; height: 48px; background-color: #185FA5; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: background-color 0.3s ease; }
         .send-btn:hover { background-color: #378ADD; }
-        .listener-badge { font-size: 11px; color: #85B7EB; background-color: #042C53; padding: 4px 12px; border-radius: 10px; }
+        .role-badge { font-size: 11px; color: #85B7EB; background-color: #042C53; padding: 4px 12px; border-radius: 10px; margin-left: 8px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
@@ -46,9 +46,9 @@
                 <div class="listener-status" id="topbar-status">● Online</div>
             </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px">
             <div class="timer" id="timer">45:00</div>
-            <div class="listener-badge" id="role-badge"></div>
+            <div class="role-badge" id="role-badge" style="display:none"></div>
         </div>
         <button class="end-btn" onclick="endSession()">End Session</button>
     </div>
@@ -69,24 +69,36 @@
         let sessionId = null
         let seconds = 45 * 60
 
-        // Am I the listener or the user in this chat?
         const isListener = sessionStorage.getItem('contigo_is_listener') === 'true'
-        const listenerInfo = JSON.parse(sessionStorage.getItem('contigo_listener') || '{"name":"Aanya","letter":"A","style":"Patient Listener","id":null}')
         const chatUserName = sessionStorage.getItem('contigo_chat_user') || 'User'
+
+        // Safe parse of listener info — avoids null style bug
+        let listenerInfo = { name: 'Aanya', letter: 'A', style: 'Patient Listener', id: null }
+        try {
+            const stored = sessionStorage.getItem('contigo_listener')
+            if (stored) {
+                const parsed = JSON.parse(stored)
+                listenerInfo = {
+                    name: parsed.name || 'Aanya',
+                    letter: parsed.letter || 'A',
+                    style: parsed.style || 'Patient Listener',
+                    id: parsed.id || null
+                }
+            }
+        } catch(e) {}
 
         // Set topbar based on role
         if (isListener) {
-            // Listener sees the user's name at the top
             document.getElementById('topbar-name').textContent = chatUserName
             document.getElementById('topbar-avatar').textContent = chatUserName.charAt(0).toUpperCase()
             document.getElementById('topbar-status').textContent = '● Connected'
-            document.getElementById('role-badge').textContent = 'You are the Listener'
+            const badge = document.getElementById('role-badge')
+            badge.style.display = 'block'
+            badge.textContent = 'You are listening'
         } else {
-            // User sees the listener's name at the top
             document.getElementById('topbar-name').textContent = listenerInfo.name
             document.getElementById('topbar-avatar').textContent = listenerInfo.letter
             document.getElementById('topbar-status').textContent = '● Online — ' + listenerInfo.style
-            document.getElementById('role-badge').textContent = ''
         }
 
         // Timer
@@ -104,14 +116,14 @@
             if (!currentUser) return
 
             if (isListener) {
-                // Listener: session already exists, just load it
+                // Listener: session already set by dashboard
                 sessionId = sessionStorage.getItem('contigo_session_id')
                 if (!sessionId) {
                     window.location.href = 'dashboard.html'
                     return
                 }
             } else {
-                // User: create a new session with no listener yet
+                // User: get or create session
                 await getOrCreateSession()
             }
 
@@ -119,11 +131,28 @@
             subscribeToMessages()
         })
 
-        // User creates session (listener_id is null — shows up on dashboard)
         async function getOrCreateSession() {
+            // Check sessionStorage first
             sessionId = sessionStorage.getItem('contigo_session_id')
             if (sessionId) return
 
+            // Try to find existing active session for this user
+            const { data: existing } = await supabase
+                .from('sessions')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('is_active', true)
+                .order('started_at', { ascending: false })
+                .limit(1)
+                .single()
+
+            if (existing) {
+                sessionId = existing.id
+                sessionStorage.setItem('contigo_session_id', sessionId)
+                return
+            }
+
+            // No existing session — create a fresh one with no listener
             const { data, error } = await supabase
                 .from('sessions')
                 .insert({
@@ -137,6 +166,8 @@
             if (data) {
                 sessionId = data.id
                 sessionStorage.setItem('contigo_session_id', sessionId)
+            } else {
+                console.error('Session error:', error)
             }
         }
 
@@ -152,8 +183,11 @@
             if (data && data.length > 0) {
                 data.forEach(msg => displayMessage(msg, false))
             } else {
-                if (!isListener) showWelcomeMessage()
-                else showListenerWelcome()
+                if (isListener) {
+                    showSystemMessage("You've joined this session. Say hello 💙")
+                } else {
+                    showWelcomeMessage()
+                }
             }
         }
 
@@ -168,15 +202,11 @@
             chatArea.appendChild(div)
         }
 
-        function showListenerWelcome() {
+        function showSystemMessage(text) {
             const chatArea = document.getElementById('chat-area')
             const div = document.createElement('div')
-            div.className = 'message listener'
-            div.innerHTML = `
-                <div class="bubble" style="background:#0A3A6E; border:1px solid #185FA5; font-size:13px; color:#85B7EB">
-                    You've joined this session. Say hello when ready 💙
-                </div>
-            `
+            div.style.cssText = 'text-align:center;font-size:12px;color:#85B7EB;padding:10px 0'
+            div.textContent = text
             chatArea.appendChild(div)
         }
 
@@ -199,7 +229,12 @@
         async function sendMessage() {
             const input = document.getElementById('message-input')
             const text = input.value.trim()
-            if (!text || !sessionId) return
+            if (!text) return
+
+            if (!sessionId) {
+                alert('Still connecting, please wait a moment...')
+                return
+            }
 
             const fakeMsg = {
                 content: text,
@@ -209,11 +244,12 @@
             displayMessage(fakeMsg, false)
             input.value = ''
 
-            await supabase.from('messages').insert({
+            const { error } = await supabase.from('messages').insert({
                 session_id: sessionId,
                 sender_id: currentUser.id,
                 content: text
             })
+            if (error) console.error('Send error:', error)
         }
 
         function displayMessage(msg, scroll) {
@@ -241,8 +277,6 @@
             sessionStorage.removeItem('contigo_session_id')
             sessionStorage.removeItem('contigo_is_listener')
             sessionStorage.removeItem('contigo_chat_user')
-
-            // Listener goes back to dashboard, user goes to homepage
             window.location.href = isListener ? 'dashboard.html' : 'index.html'
         }
 
