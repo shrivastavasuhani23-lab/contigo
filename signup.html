@@ -161,46 +161,45 @@
         btn.textContent = loading ? 'Please wait...' : label
     }
 
-    async function handleSubmit() {
-        const name     = document.getElementById('name-input').value.trim()
-        const email    = document.getElementById('email-input').value.trim()
-        const password = document.getElementById('password-input').value
-        clearMessage()
+   async function handleSubmit() {
+    const name     = document.getElementById('name-input').value.trim()
+    const email    = document.getElementById('email-input').value.trim()
+    const password = document.getElementById('password-input').value
+    clearMessage()
 
-        if (!email) return showMessage('Please enter your email.', 'error')
-        if (!password) return showMessage('Please enter your password.', 'error')
+    if (!email) return showMessage('Please enter your email.', 'error')
+    if (!password) return showMessage('Please enter your password.', 'error')
 
-        if (isLoginMode) {
-            setLoading('submit-btn', true, 'Log In')
-            const result = await signInWithPassword(email, password)
-            setLoading('submit-btn', false, 'Log In')
-            if (result.success) {
-    showMessage('Welcome back! Taking you in...', 'success')
-    setTimeout(async () => {
-        const profile = await getMyProfile()
-        if (profile && profile.role === 'listener') {
-            window.location.href = 'dashboard.html'
+    if (isLoginMode) {
+        setLoading('submit-btn', true, 'Log In')
+        const result = await signInWithPassword(email, password)
+        setLoading('submit-btn', false, 'Log In')
+        if (result.success) {
+            showMessage('Welcome back! Taking you in...', 'success')
+            setTimeout(async () => {
+                const profile = await getMyProfile()
+                if (profile && profile.role === 'listener') {
+                    window.location.href = 'dashboard.html'
+                } else {
+                    window.location.href = 'listeners.html'
+                }
+            }, 1500)
         } else {
-            window.location.href = 'listeners.html'
+            showMessage(result.message, 'error')
         }
-    }, 1500)
-}
-            } else {
-                showMessage(result.message, 'error')
-            }
+    } else {
+        if (!name) return showMessage('Please enter your name.', 'error')
+        if (password.length < 6) return showMessage('Password must be at least 6 characters.', 'error')
+        setLoading('submit-btn', true, 'Create My Account')
+        const result = await signUpWithPassword(name, email, password, currentRole)
+        setLoading('submit-btn', false, 'Create My Account')
+        if (result.success) {
+            showMessage('Account created! Check your email to confirm, then log in.', 'success')
         } else {
-            if (!name) return showMessage('Please enter your name.', 'error')
-            if (password.length < 6) return showMessage('Password must be at least 6 characters.', 'error')
-            setLoading('submit-btn', true, 'Create My Account')
-            const result = await signUpWithPassword(name, email, password, currentRole)
-            setLoading('submit-btn', false, 'Create My Account')
-            if (result.success) {
-                showMessage('Account created! Check your email to confirm, then log in.', 'success')
-            } else {
-                showMessage(result.message, 'error')
-            }
+            showMessage(result.message, 'error')
         }
     }
+}
 
     async function handleMagicLink() {
         const email = document.getElementById('email-input').value.trim()
