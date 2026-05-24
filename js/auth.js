@@ -17,7 +17,7 @@ async function signInWithMagicLink(email, role, name) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: window.location.origin + '/chat.html',
+     emailRedirectTo: window.location.origin + (role === 'listener' ? '/dashboard.html' : '/listeners.html'),
       data: { full_name: name || '', role: role || 'user' }
     }
   })
