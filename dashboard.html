@@ -180,7 +180,7 @@
     async function loadHistory() {
         const { data } = await supabase
             .from('sessions')
-            .select('*, profiles:user_id(full_name, email)')
+            .select('*')
             .eq('listener_id', currentUser.id).eq('is_active', false)
             .order('started_at', { ascending: false }).limit(5)
 
