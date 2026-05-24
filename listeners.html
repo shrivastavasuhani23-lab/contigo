@@ -90,7 +90,7 @@
         card.innerHTML = `
             <div class="avatar">${listener.avatar_letter}</div>
             <div class="listener-name">${listener.full_name}</div>
-            <div class="listener-style">${listener.style}</div>
+           <div class="listener-style">${listener.style || ''}</div>
             <div class="listener-bio">${listener.bio}</div>
             <div class="tags">${tags}</div>
             <div class="available">
