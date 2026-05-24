@@ -212,7 +212,7 @@
     async function loadLiveRequests() {
         const { data } = await supabase
             .from('sessions')
-            .select('*, profiles:user_id(full_name, email)')
+           .select('*')
             .is('listener_id', null).eq('is_active', true)
             .order('started_at', { ascending: true })
 
